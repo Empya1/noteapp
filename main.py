@@ -1,4 +1,4 @@
-
+import os
 from kivymd.app import MDApp
 from kivy.lang import Builder 
 from kivy.base import EventLoop
@@ -15,6 +15,8 @@ from kivymd.uix.bottomsheet import MDCustomBottomSheet
 from kivy.core.clipboard import Clipboard
 from kivymd.uix.snackbar import Snackbar
 
+def get_path(fn): 
+	return os.path.join(os.path.dirname(__file__), fn)
 
 try: 
 	from mysql import Database
@@ -59,14 +61,14 @@ except:
 
 def snack(txt): 
 	try:
-		Snackbar(str(txt)).open()
+		Snackbar(text=str(txt)).open()
 		
 	except: 
 		pass
 	
 
 def Notify(title,msg): 
-	notification.notify(title=title,message=msg)
+	notification.notify(title=title,message=msg,app_icon=get_path("notification_icon.jpg"))
 
 
 def alert(txt): 
@@ -117,40 +119,42 @@ class NoteApp(MDApp):
 		self.theme_cls.primary_palette = "Teal"
 		self.theme_cls.primary_hue = "400"
 		self.theme_cls.material_style = "M2"
+		
+		self.testing = True
+			
+		self.path = ("/data/data/org.test.notes/files/app/" if self.testing==False else "")
+		
+		self.logo = get_path("empya_logo.png")
+		
+		self.smoke = get_path("smoke.jpg")
+		
+		self.profont = get_path("profont")
+		
 		return Builder.load_file("app.kv")
 		
 	def on_start(self):
-		print(dir(self.root))
-		#self.storage_access = False
-		self.path = "/data/data/org.test.notes/files/app/"
-		#alert("Starting")
-		#Notify("Ready", "Ready")
 				
 		try:  
-			from android.permissions import request_permissions, Permission 
+			from android.permissions import request_permissions, Permission
+			
 			request_permissions([Permission.WRITE_EXTERNAL_STORAGE])
-			request_permissions([Permission.READ_EXTERNAL_STORAGE])
 			
 		except:  
 			alert("Permission request error")
+		
 				
 		try:  
-			self.db = Database("MyNotes")
+			self.db = Database(get_path("MyNotes"))
 			
 		except: 
 			pass
 			
-					
-		
-		#self.root.ids.sm.current = "changepwd"
 		
 		try:
-			#alert("setting bottomnav transition")
+	
 			self.root.ids.bottomnav.transition = WipeTransition
-			#alert("setting bottomnav duration")
 			self.root.ids.bottomnav.transition_duration = 0.6
 		except: 
-			#alert("setting bottom nav failed")
 			pass
 		
 		#self.show_notes
@@ -181,7 +185,6 @@ class NoteApp(MDApp):
 					pass
 				
 		except: 
-			#alert("check if notes 0 change screen failed")
 			pass
 			
 			
@@ -190,7 +193,7 @@ class NoteApp(MDApp):
 			"""alert("importing shelve file")
 			import shelve
 			alert("creating shelve file")"""
-			self.store = shelve.open("AppConfig")
+			self.store = shelve.open(get_path("appData"))
 			
 		except: 
 			alert("unknown error")
@@ -298,6 +301,9 @@ class NoteApp(MDApp):
 			elif self.root.ids.sm.current == "changepwd": 
 				self.root.ids.sm.current = "Main"
 				
+			elif self.root.ids.sm.current == "credits": 
+				self.root.ids.sm.current = "Main"
+				
 			
 			
 		return True
@@ -375,7 +381,7 @@ class NoteApp(MDApp):
 		#alert(txt)
 		
 			
-		self.db.insert("Notes", [(id, str(title.text), txt, date_and_time, self.path+img)])
+		self.db.insert("Notes", [(id, str(title.text), txt, date_and_time, get_path(img))])
 		
 		if len(self.db.select_all("Notes")) == 0: 
 			self.root.ids.sm2.current = "nonoteview"
